@@ -1,0 +1,6 @@
+AllCops:
+  TargetRubyVersion: 2.0
+
+Style/Encoding:
+  EnforcedStyle: always
+  Enabled: true
