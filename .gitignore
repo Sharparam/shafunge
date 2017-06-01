@@ -117,3 +117,6 @@ tags
 
 # RSpec failure tracking
 .rspec_status
+
+# Ignore programs folder
+programs/

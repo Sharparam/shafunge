@@ -6,4 +6,8 @@ require 'bundler/setup'
 require 'shafunge'
 require 'pry'
 
+def run(file)
+  Shafunge::Interpreter.new(Shafunge::Program.new file).step
+end
+
 Pry.start
