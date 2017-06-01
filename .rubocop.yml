@@ -4,3 +4,6 @@ AllCops:
 Style/Encoding:
   EnforcedStyle: always
   Enabled: true
+
+Style/FrozenStringLiteralComment:
+  EnforcedStyle: always
