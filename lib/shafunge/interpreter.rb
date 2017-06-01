@@ -5,12 +5,58 @@ require 'io/console'
 require 'matrix'
 
 module Shafunge
+  # Executes Befunge code from a loaded program.
   class Interpreter
     DIRECTIONS = {
       right: Vector[1, 0],
       left: Vector[-1, 0],
       up: Vector[0, -1],
       down: Vector[0, 1]
+    }.freeze
+
+    OPERATIONS = {
+      /\d/ => ->(char) { @stack.push char.to_i },
+      '+' => -> { @stack.push @stack.pop + @stack.pop },
+      '-' => lambda do
+        b, a = @stack.pop 2
+        @stack.push b - a
+      end,
+      '*' => -> { @stack.push @stack.pop * @stack.pop },
+      '/' => lambda do
+        b, a = @stack.pop 2
+        @stack.push b / a
+      end,
+      '%' => lambda do
+        b, a = @stack.pop 2
+        @stack.push b % a
+      end,
+      '!' => -> { @stack.push @stack.pop.zero? ? 1 : 0 },
+      '`' => -> { @stack.push @stack.pop < @stack.pop ? 1 : 0 },
+      '>' => -> { @direction = :right },
+      '<' => -> { @direction = :left },
+      '^' => -> { @direction = :up },
+      'v' => -> { @direction = :down },
+      '?' => -> { @direction = DIRECTIONS.keys.sample },
+      '_' => -> { @direction = @stack.pop.zero? ? :right : :left },
+      '|' => -> { @direction = @stack.pop.zero? ? :down : :up },
+      '"' => -> { @string = !@string },
+      ':' => -> { @stack.push @stack.last },
+      '\\' => -> { @stack.push @stack.pop, @stack.pop },
+      '$' => -> { @stack.pop },
+      '.' => -> { print "#{@stack.pop} " },
+      ',' => -> { print @stack.pop.chr },
+      '#' => -> { @skip = true },
+      'p' => lambda do
+        v, x, y = @stack.pop 3
+        @program[x, y] = v.chr
+      end,
+      'g' => lambda do
+        x, y = @stack.pop 2
+        @stack.push @program[x, y].ord
+      end,
+      '&' => -> { @stack.push STDIN.getch.to_i },
+      '~' => -> { @stack.push STDIN.getch.ord },
+      '@' => -> { @exit = true }
     }.freeze
 
     def initialize(program)
@@ -28,71 +74,12 @@ module Shafunge
         return
       end
 
-      case char
-      when /\d/
-        @stack.push char.to_i
-      when '+'
-        @stack.push @stack.pop + @stack.pop
-      when '-'
-        b, a = @stack.pop 2
-        @stack.push b - a
-      when '*'
-        @stack.push @stack.pop * @stack.pop
-      when '/'
-        b, a = @stack.pop 2
-        @stack.push b / a
-      when '%'
-        b, a = @stack.pop 2
-        @stack.push b % a
-      when '!'
-        @stack.push @stack.pop == 0 ? 1 : 0
-      when '`'
-        @stack.push @stack.pop < @stack.pop ? 1 : 0
-      when '>'
-        @direction = :right
-      when '<'
-        @direction = :left
-      when '^'
-        @direction = :up
-      when 'v'
-        @direction = :down
-      when '?'
-        @direction = DIRECTIONS.keys.sample
-      when '_'
-        @direction = @stack.pop == 0 ? :right : :left
-      when '|'
-        @direction = @stack.pop == 0 ? :down : :up
-      when '"'
-        @string = !@string
-      when ':'
-        @stack.push @stack.last
-      when '\\'
-        @stack.push @stack.pop, @stack.pop
-      when '$'
-        @stack.pop
-      when '.'
-        print "#{@stack.pop} "
-      when ','
-        print @stack.pop.chr
-      when '#'
-        @skip = true
-      when 'p'
-        v, x, y = @stack.pop 3
-        @program[x, y] = v.chr
-      when 'g'
-        x, y = @stack.pop 2
-        @stack.push @program[x, y].ord
-      when '&'
-        @stack.push STDIN.getch.to_i
-      when '~'
-        @stack.push STDIN.getch.ord
-      when '@'
-        @exit = true
-      end
+      op = OPERATIONS.find { |k, _| k === char }
+      instance_exec char, &op.last if op
     end
 
     def step
-      while !@exit
+      until @exit
         if @skip
           @skip = false
         else

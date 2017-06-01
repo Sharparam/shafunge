@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 module Shafunge
+  # Loads a Befunge program from file and stores it in a 2D array.
   class Program
     def initialize(file)
       @program = File.readlines(file).map { |l| l.chomp.chars }

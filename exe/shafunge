@@ -4,4 +4,4 @@
 
 require 'shafunge'
 
-Shafunge::Interpreter.new(Shafunge::Program.new ARGV[0]).step
+Shafunge::Interpreter.new(Shafunge::Program.new(ARGV[0])).step
